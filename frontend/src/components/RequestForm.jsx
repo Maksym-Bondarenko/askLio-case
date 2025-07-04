@@ -4,13 +4,9 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Upload, Loader2 } from 'lucide-react';
 import axios from 'axios';
+import { parsePdf, createRequest } from '../services/requestService';
 
-const RequestForm = () => {
-  const navigate = useNavigate();
-
-  const [previewData, setPreviewData] = useState(null);
-
-  const [form, setForm] = useState({
+const initialState = {
     requestorName: '',
     title: '',
     vendorName: '',
@@ -18,7 +14,16 @@ const RequestForm = () => {
     department: '',
     totalCost: '',
     orderLines: [],
-  });
+  };
+
+const RequestForm = () => {
+  const navigate = useNavigate();
+
+  const [isParsing, setParsing] = useState(false);
+
+  const [previewData, setPreviewData] = useState(null);
+
+  const [form, setForm] = useState(initialState);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,23 +52,41 @@ const RequestForm = () => {
     const file = e.target.files[0];
     if (!file) return;
   
-    const formData = new FormData();
-    formData.append('pdf', file);
-  
+    setParsing(true);
+
     try {
-      const response = await axios.post('http://localhost:3000/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const data = await parsePdf(file);
+      console.log('Extracted →', data);
   
-      console.log("Parsed data:", response.data);
-      setPreviewData(response.data); // 🔍 set preview
-      //alert("Data extracted. Preview below — confirm to apply.");
-      toast('Extracted! Preview below.',{icon:<Upload size={18}/>})
+      setForm((prev) => ({
+        ...prev,
+        vendorName : data.vendorName || prev.vendorName,
+        vatId      : data.vatId      || prev.vatId,
+        department : data.department || prev.department,
+        totalCost  : data.totalCost !== undefined ? String(data.totalCost) : prev.totalCost,
+      
+        orderLines : data.orderLines.length
+          ? data.orderLines.map((l) => ({
+              description:  l.description,
+              amount:       String(l.amount),
+              unitPrice:    String(l.unitPrice),
+              totalPrice:   String(l.totalPrice),
+              commodityGroupId:   l.commodityGroupId,
+              commodityGroupName: l.commodityGroupName,
+              unit: l.unit || 'pcs',
+            }))
+          : prev.orderLines,
+      }));
+
+      toast.success('Auto-filled from PDF!', { icon: <Upload size={16}/> });
     } catch (err) {
-      console.error("Error parsing PDF:", err);
-      alert("Failed to extract data from PDF.");
+      console.error('PDF parse failed', err);
+      toast.error('Could not extract info 👎');
+    } finally {
+        setParsing(false);
     }
-  };
+  };  
+  
   
   const validateForm = () => {
     const requiredFields = ['requestorName', 'title', 'vendorName', 'vatId', 'department', 'totalCost'];
@@ -85,30 +108,34 @@ const RequestForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
-  
-    try {
-      await axios.post('http://localhost:3000/api/requests', form);
-
-      // alert('Request submitted successfully!');
-
-      toast.success('Request saved!');
-  
-      // Reset form after submit
-      setForm({
-        requestorName: '',
-        title: '',
-        vendorName: '',
-        vatId: '',
-        department: '',
-        totalCost: '',
-        orderLines: [],
-      });
-    } catch (err) {
-      console.error('Submission failed:', err);
-      alert('Submission failed');
+    /* 0) basic client-side check */
+    if (!form.orderLines.length) {
+        toast.error('Add at least one order line');    // optional toast
+        return;
     }
-  };
+
+    /* 1) convert string → number */
+    const payload = {
+        ...form,
+        totalCost: Number(form.totalCost) || 0,
+        orderLines: form.orderLines.map((l) => ({
+        ...l,
+        amount:      Number(l.amount)      || 0,
+        unitPrice:   Number(l.unitPrice)   || 0,
+        totalPrice:  Number(l.totalPrice)  || 0,
+        })),
+    };
+
+    try {
+        await createRequest(payload);
+        toast.success('Request saved!');
+        /* 2) reset */
+        setForm(initialState);
+    } catch (err) {
+        console.error('Submission failed →', err?.response?.data || err);
+        toast.error('Server rejected payload (check required fields).');
+    }
+    };
   
   {previewData && (
     <div style={{ backgroundColor: '#f6f6f6', padding: '1rem', marginBottom: '1rem' }}>
@@ -201,11 +228,21 @@ const RequestForm = () => {
       <button type="button" onClick={addOrderLine}>+ Add Line</button>
 
       <div style={{ marginTop: '1rem' }}>
-        <button type="submit">Submit</button>
+        <button type="submit" disabled={isParsing}>Submit</button>
         <button type="button" onClick={() => navigate('/overview')} style={{ marginLeft: '1rem' }}>
             Go to Overview →
         </button>
       </div>
+
+      {isParsing && (
+        <div style={{
+            position:'absolute', inset:0, backdropFilter:'blur(2px)',
+            display:'flex', alignItems:'center', justifyContent:'center'
+        }}>
+            <Loader2 size={48} className="spin" />
+        </div>
+      )}
+
     </motion.form>
   );
 };

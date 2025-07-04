@@ -22,3 +22,6 @@ tr:hover{background:#1b1b1b}
   display:flex;align-items:center;justify-content:center;
 }
 .modal-box{background:#181818;padding:2rem;border-radius:1rem;max-width:500px;width:90%;}
+
+.spin{ animation:spin 1s linear infinite }
+@keyframes spin{ from{transform:rotate(0)}to{transform:rotate(360deg)} }

@@ -47,19 +47,21 @@ const RequestOverview = () => {
   };
 
   const exportToExcel = () => {
-    const exportData = requests.map((r) => ({
+    const rows = filteredRequests.map(r => ({
       Title: r.title,
-      Requestor: r.requestorName,
       Vendor: r.vendorName,
-      Department: r.department,
-      TotalCost: r.totalCost,
+      Total:  Number(r.totalCost),
       Status: r.status,
     }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Requests');
-    const blob = XLSX.write(workbook, { bookType: 'xlsx', type: 'blob' });
+  
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Requests');
+  
+    const uint8 = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob  = new Blob([uint8], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     saveAs(blob, 'requests.xlsx');
   };
 

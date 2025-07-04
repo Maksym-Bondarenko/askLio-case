@@ -1,15 +1,17 @@
-import { IsNotEmpty, IsNumber, ValidateNested, IsString, IsArray } from 'class-validator';
+import { IsNotEmpty, IsNumber, ValidateNested, IsString, IsArray, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateOrderLineDto {
-  @IsNotEmpty() @IsString() description: string;
-  @IsNumber() unitPrice: number;
-  @IsNumber() amount: number;
-  @IsNumber() totalPrice: number;
-  unit?: string;
-  commodityGroupId?: string;
-  commodityGroupName?: string;
-}
+    @IsNotEmpty() @IsString() description: string;
+    @Type(() => Number) @IsNumber() unitPrice: number;
+    @Type(() => Number) @IsNumber() amount: number;
+    @Type(() => Number) @IsNumber() totalPrice: number;
+  
+    @IsOptional() @IsString() unit?: string;
+  
+    @IsOptional() commodityGroupId?: string;
+    @IsOptional() commodityGroupName?: string;
+  }
 
 export class CreateRequestDto {
   @IsNotEmpty() requestorName: string;
