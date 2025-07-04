@@ -5,6 +5,7 @@ import { ProcurementRequest } from './request/entities/request.entity';
 import { OrderLine } from './request/entities/order-line.entity';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { ConfigModule } from '@nestjs/config';
+import { AIModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ConfigModule } from '@nestjs/config';
       entities: [ProcurementRequest, OrderLine],
       synchronize: true,
     }),
+    AIModule,
     RequestModule,
     FileUploadModule,
   ],

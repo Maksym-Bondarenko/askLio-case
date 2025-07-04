@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import { Upload, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
 const RequestForm = () => {
@@ -54,7 +57,8 @@ const RequestForm = () => {
   
       console.log("Parsed data:", response.data);
       setPreviewData(response.data); // 🔍 set preview
-      alert("Data extracted. Preview below — confirm to apply.");
+      //alert("Data extracted. Preview below — confirm to apply.");
+      toast('Extracted! Preview below.',{icon:<Upload size={18}/>})
     } catch (err) {
       console.error("Error parsing PDF:", err);
       alert("Failed to extract data from PDF.");
@@ -85,7 +89,10 @@ const RequestForm = () => {
   
     try {
       await axios.post('http://localhost:3000/api/requests', form);
-      alert('Request submitted successfully!');
+
+      // alert('Request submitted successfully!');
+
+      toast.success('Request saved!');
   
       // Reset form after submit
       setForm({
@@ -138,7 +145,12 @@ const RequestForm = () => {
   
 
   return (
-    <form onSubmit={handleSubmit}>
+    <motion.form
+      initial={{opacity:0, y:20}}
+      animate={{opacity:1, y:0}}
+      transition={{duration:.4}}
+      onSubmit={handleSubmit}
+    >
       <h3>General Info</h3>
       <input name="requestorName" value={form.requestorName} onChange={handleChange} placeholder="Requestor Name" required />
       <input name="title" value={form.title} onChange={handleChange} placeholder="Short Description" required />
@@ -194,7 +206,7 @@ const RequestForm = () => {
             Go to Overview →
         </button>
       </div>
-    </form>
+    </motion.form>
   );
 };
 

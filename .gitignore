@@ -1,3 +1,16 @@
-.env
+# === root ignore =========================
+# Node artefacts
+node_modules/
+dist/
+.cache/
+.nyc_output/
+coverage/
 
-*.env
+# env / secrets
+.env
+*.local
+
+# misc
+.DS_Store
+.idea/
+.vscode/
