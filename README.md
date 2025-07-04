@@ -49,7 +49,7 @@ Visit **[http://localhost:5173](http://localhost:5173)**
 
 ---
 
-## 3  Docker / Postgres
+## 3  Docker
 
 ```bash
 # root dir (.env must contain OPENAI_API_KEY)
@@ -58,7 +58,6 @@ docker compose --env-file .env up --build
 
 * Frontend → [http://localhost:5173](http://localhost:5173)
 * Backend → [http://localhost:3000](http://localhost:3000)
-* Postgres  → `localhost:5432` user/password `lio`
 
 Run seed inside container (optional):
 
@@ -105,3 +104,4 @@ asklio-case/
 
 ## 6 Screenshots
 
+![image](https://github.com/user-attachments/assets/015dff5a-624b-4edb-8aa6-98142b36db3c)
